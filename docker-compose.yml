@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  web:
+    build: ./web
+    # Переменная окружения - имя пользователя для apache
+    # Это установка прав доступа в контейнере
+    environment:
+      - APACHE_RUN_USER=www-data
+#      - APACHE_RUN_USER=#1000
+    # Расшарить наш проект внутри контейнера
+    volumes:
+      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+    ports:
+      - 8080:80
+#    depends_on:
+#      - db
+#      - composer
+    # Нужно для входа в контейнер и выполнения команд
+    working_dir: ${APP_PATH_CONTAINER}
+
+  db:
+    image: mariadb
+    restart: always
+    volumes:
+      - ${DB_PATH_HOST}:/var/lib/mysql
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: 123456
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 6080:8080
+
+  composer:
+    image: composer:1.7
+    volumes:
+      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+    working_dir: ${APP_PATH_CONTAINER}
+    command: composer install
