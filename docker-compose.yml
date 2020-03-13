@@ -2,41 +2,32 @@ version: '3'
 
 services:
   web:
-    build: ./web
-    # Переменная окружения - имя пользователя для apache
-    # Это установка прав доступа в контейнере
-    environment:
-      - APACHE_RUN_USER=www-data
-#      - APACHE_RUN_USER=#1000
-    # Расшарить наш проект внутри контейнера
-    volumes:
-      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+    build: .
     ports:
       - 8080:80
-#    depends_on:
-#      - db
-#      - composer
-    # Нужно для входа в контейнер и выполнения команд
-    working_dir: ${APP_PATH_CONTAINER}
-
-  db:
-    image: mariadb
-    restart: always
     volumes:
-      - ${DB_PATH_HOST}:/var/lib/mysql
-    environment:
-      MYSQL_USER: root
-      MYSQL_ROOT_PASSWORD: 123456
+      - .:/var/www/html
+    links:
+      - postgres
 
   adminer:
-    image: adminer
+    image: adminer:4.7.5
     restart: always
     ports:
       - 6080:8080
+    links:
+      - postgres:postgres
+    depends_on:
+      - postgres
 
-  composer:
-    image: composer:1.7
+  postgres:
+    image: postgres:12.1
+    restart: always
+    environment:
+      POSTGRES_DB: symfony
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
     volumes:
-      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
-    working_dir: ${APP_PATH_CONTAINER}
-    command: composer install
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
